@@ -27,6 +27,8 @@ namespace Plumb
         private void Awake()
         {
             Log = Logger;
+            PluginConfig.Bind(base.Config);
+            PlumbConsole.Register();
 
             // One class at a time: a target that moved in a game update costs that patch, not all of them.
             _harmony = new Harmony(PluginGuid);
@@ -48,6 +50,28 @@ namespace Plumb
             }
 
             Logger.LogInfo(PluginName + " " + PluginVersion + " loaded (" + ok + " patches, " + failed + " failed).");
+        }
+
+        private void Start()
+        {
+            // Both mods write _RippleDistance; whichever runs last wins.
+            foreach (var info in BepInEx.Bootstrap.Chainloader.PluginInfos.Values)
+            {
+                string id = info.Metadata.GUID + " " + info.Metadata.Name;
+                if (id.IndexOf("StraightStructures", StringComparison.OrdinalIgnoreCase) >= 0
+                    || id.IndexOf("Straight Structures", StringComparison.OrdinalIgnoreCase) >= 0)
+                    Logger.LogWarning("Badgers Straight Structures is also installed; both change the same setting and the last one to run wins. Remove one.");
+            }
+        }
+
+        private void Update()
+        {
+            if (Player.m_localPlayer == null || !PluginConfig.CompareKey.Value.IsDown())
+                return;
+            if (Console.IsVisible() || (Chat.instance != null && Chat.instance.HasFocus()))
+                return;
+            Ripple.Compare = !Ripple.Compare;
+            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, Ripple.Compare ? "Plumb: vanilla warp" : "Plumb: your strength");
         }
 
         private void OnDestroy()

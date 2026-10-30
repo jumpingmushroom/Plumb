@@ -1,5 +1,5 @@
-"""Placeholder Thunderstore icon: 256x256 PNG. A dark plate with a golden border and a big
-orange "!" (bar and dot), the colour of the in-game marker. Written without PIL, which the
+"""Placeholder Thunderstore icon: 256x256 PNG. A dark plate with a golden border and an
+orange plumb bob hanging on a line. Written without PIL, which the
 build box lacks. Replace with real art when there is some.
 Run from the repo root: python3 build/make_icon.py"""
 import struct
@@ -37,13 +37,17 @@ border_w = 10 * SS
 rounded_rect(0, 0, W, W, 34 * SS, BORDER)
 rounded_rect(border_w, border_w, W - border_w, W - border_w, 26 * SS, PLATE)
 
-# the "!": a tapering bar and a round dot
+# a plumb bob: a thin vertical line, then a round top tapering to a point
 cx = 128 * SS
-for i in range(int(110 * SS)):
-    half = (22 - 8 * i / (110 * SS)) * SS
-    rounded_rect(cx - half, 44 * SS + i, cx + half, 44 * SS + i + 1, 0, ORANGE)
-r = 18 * SS
-rounded_rect(cx - r, 186 * SS - r, cx + r, 186 * SS + r, r, ORANGE)
+rounded_rect(cx - 2 * SS, 36 * SS, cx + 2 * SS, 118 * SS, 0, BORDER)
+r = 34 * SS
+cy = 146 * SS
+rounded_rect(cx - r, cy - r, cx + r, cy + r, r, ORANGE)
+tip = 222 * SS
+for y in range(int(cy), int(tip)):
+    half = r * (tip - y) / (tip - cy)
+    rounded_rect(cx - half, y, cx + half, y + 1, 0, ORANGE)
+rounded_rect(cx - 10 * SS, 112 * SS, cx + 10 * SS, 120 * SS, 3 * SS, BORDER)
 
 # downsample
 out = bytearray()
