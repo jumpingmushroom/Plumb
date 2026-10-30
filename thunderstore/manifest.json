@@ -1,0 +1,9 @@
+{
+  "name": "Plumb",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/jumpingmushroom/Plumb",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2350"
+  ],
+  "description": "Straight building pieces: removes the deliberate warping on walls, beams and floors. Adjustable strength, live config, compare hotkey. Client-side."
+}
