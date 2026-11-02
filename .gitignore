@@ -30,4 +30,4 @@ build/deploy.sh
 build/logs.sh
 build/shot.sh
 build/crop.sh
-docs/images/
+docs/images/probe*
