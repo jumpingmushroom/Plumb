@@ -21,7 +21,7 @@ creating the GitHub repo.
 - **Scope A: every material that has `_RippleDistance`.** That covers vanilla building pieces,
   plus furniture, carts, ships and modded pieces that use the vanilla piece shader. There are no
   per-material categories and no lists to maintain.
-- **Strength multiplies each material's own vanilla value.** The range is 0–3 and the default is 0. It
+- **Strength multiplies each material's own vanilla value.** The range is 0–3 and the default is 0.1 (changed from 0 after the rig test, §1.5). It
   updates live when the config changes.
 - **Console command `plumb [0–3]`.** It sets and saves the strength. With no argument, it prints
   the current state.
@@ -76,6 +76,21 @@ through the text. At 0 the board doesn't move, so the clipping should disappear 
 Badgers says only 0.001–0.007 is safe. That hints at a separate problem at exactly 0, possibly
 depth fighting between the text and a perfectly flat board. Confirm on the rig (§5).
 
+### 1.5 Measured on the rig (2026-11-02, game 1.0.21)
+
+- **The first scan finds 615 materials (610 names) with `_RippleDistance`.** Their vanilla values
+  are far from uniform: 395 are `0`, 31 are `0.1`, and the rest range from `0.005` to `10`
+  (0.05×36, 0.5×28, 0.3×15, 1×14, ...). The values of 1 or more are probably other shaders reusing
+  the property name. The first scan now logs their names.
+- **Straight settings make overlapping pieces flicker.** Piece meshes overlap where they snap
+  (floor on floor, wall on wall), and the vanilla warp happens to push the overlapping surfaces
+  apart. At strengths 0, 0.001 and 0.05, two back-to-back captures show whole texture patches on
+  stone floor tiles and walls switching between the two surfaces. That's depth fighting. It
+  doesn't happen at 1 or 2.
+  So it isn't a shader failing at exactly 0, because 0.001 flickers as well.
+- **0.1 looks straight and doesn't flicker** (the user's pick in-game), so it's the default. Values
+  below 0.1 stay allowed, and the config description warns about the flicker.
+
 ## 2. Design
 
 ### 2.1 Approach: shared materials, written once
@@ -117,7 +132,7 @@ depth fighting between the text and a perfectly flat board. Confirm on the rig (
 
 | Section | Key | Default | Notes |
 |---|---|---|---|
-| General | `Strength` | `0` | 0 = straight, 1 = vanilla, up to 3 = warped more. `AcceptableValueRange(0, 3)` |
+| General | `Strength` | `0.1` | 0.1 = straight (below it, overlaps flicker), 1 = vanilla, up to 3 = warped more. `AcceptableValueRange(0, 3)` |
 | General | `CompareKey` | none | Toggles between vanilla and `Strength`. Not saved |
 
 ### 2.5 Signs

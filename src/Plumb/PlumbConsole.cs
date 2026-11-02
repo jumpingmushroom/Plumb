@@ -7,14 +7,14 @@ namespace Plumb
     {
         public static void Register()
         {
-            new Terminal.ConsoleCommand("plumb", "[0-3] Plumb: building warp strength (0 = straight, 1 = vanilla)",
+            new Terminal.ConsoleCommand("plumb", "[0-3] Plumb: building warp strength (0.1 = straight, 1 = vanilla)",
                 delegate (Terminal.ConsoleEventArgs args)
                 {
                     if (args.Length > 1)
                     {
                         if (!WarpModel.TryParseStrength(args[1], out float v))
                         {
-                            args.Context.AddString("plumb [0-3]   0 = straight, 1 = vanilla");
+                            args.Context.AddString("plumb [0-3]   0.1 = straight (default), 1 = vanilla; below 0.1 overlapping pieces flicker");
                             return;
                         }
                         PluginConfig.Strength.Value = v;

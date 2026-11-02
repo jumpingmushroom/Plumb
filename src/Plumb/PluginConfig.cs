@@ -10,8 +10,8 @@ namespace Plumb
 
         public static void Bind(ConfigFile cfg)
         {
-            Strength = cfg.Bind("General", "Strength", 0f,
-                new ConfigDescription("How much building pieces warp. 0 = perfectly straight, 1 = vanilla, up to 3 = more warped than vanilla.",
+            Strength = cfg.Bind("General", "Strength", 0.1f,
+                new ConfigDescription("How much building pieces warp. 1 = vanilla, up to 3 = more warped. The default 0.1 looks straight; below about 0.1, overlapping pieces (floor on floor, wall on wall) start to flicker.",
                     new AcceptableValueRange<float>(0f, WarpModel.MaxStrength)));
             CompareKey = cfg.Bind("General", "CompareKey", KeyboardShortcut.Empty,
                 "Toggle between vanilla warp and your Strength, to compare. Not saved.");

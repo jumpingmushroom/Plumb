@@ -40,6 +40,9 @@ namespace Plumb
                 _loggedFirstScan = true;
                 var values = Materials.Select(m => Table.Resolve(m.name, 0f)).GroupBy(v => v).OrderBy(g => g.Key)
                     .Select(g => g.Key.ToString("0.####", CultureInfo.InvariantCulture) + "×" + g.Count());
+                // Values this large are unlikely to be a building warp; name them so we know what else shares the property.
+                var large = Materials.Where(m => Table.Resolve(m.name, 0f) >= 1f).Select(m => VanillaTable.BaseName(m.name) + "@" + m.shader.name).Distinct().OrderBy(n => n);
+                PlumbPlugin.Log.LogInfo("Plumb: materials with vanilla >= 1: " + string.Join(", ", large));
                 PlumbPlugin.Log.LogInfo("Plumb: " + Materials.Count + " materials (" + Table.Count + " names), vanilla values: " + string.Join(", ", values));
             }
         }
