@@ -14,11 +14,11 @@ namespace Plumb
     {
         private static readonly int ID = Shader.PropertyToID("_RippleDistance");
         private static readonly VanillaTable Table = new VanillaTable();
-        private static readonly HashSet<Material> Materials = new HashSet<Material>();
+        private static readonly Dictionary<Material, float> Vanilla = new Dictionary<Material, float>();
         private static bool _compare;
-        private static bool _loggedFirstScan;
+        private static bool _scannedOnce;
 
-        public static int MaterialCount => Materials.Count;
+        public static int MaterialCount => Vanilla.Count;
 
         public static bool Compare
         {
@@ -30,33 +30,35 @@ namespace Plumb
         {
             foreach (Material m in Resources.FindObjectsOfTypeAll<Material>())
             {
-                if (m == null || !m.HasProperty(ID) || !Materials.Add(m))
+                if (m == null || !m.HasProperty(ID) || Vanilla.ContainsKey(m))
                     continue;
-                Table.Resolve(m.name, m.GetFloat(ID));
+                // Nothing is scaled before the first scan, so its values are all true vanilla.
+                Vanilla[m] = Table.Record(m.name, m.GetFloat(ID), trusted: !_scannedOnce);
             }
 
-            if (!_loggedFirstScan)
+            if (!_scannedOnce)
             {
-                _loggedFirstScan = true;
-                var values = Materials.Select(m => Table.Resolve(m.name, 0f)).GroupBy(v => v).OrderBy(g => g.Key)
+                _scannedOnce = true;
+                var values = Vanilla.Values.GroupBy(v => v).OrderBy(g => g.Key)
                     .Select(g => g.Key.ToString("0.####", CultureInfo.InvariantCulture) + "×" + g.Count());
                 // Values this large are unlikely to be a building warp; name them so we know what else shares the property.
-                var large = Materials.Where(m => Table.Resolve(m.name, 0f) >= 1f).Select(m => VanillaTable.BaseName(m.name) + "@" + m.shader.name).Distinct().OrderBy(n => n);
+                var large = Vanilla.Where(kv => kv.Value >= 1f).Select(kv => kv.Key).Select(m => VanillaTable.BaseName(m.name) + "@" + m.shader.name).Distinct().OrderBy(n => n);
                 PlumbPlugin.Log.LogInfo("Plumb: materials with vanilla >= 1: " + string.Join(", ", large));
-                PlumbPlugin.Log.LogInfo("Plumb: " + Materials.Count + " materials (" + Table.Count + " names), vanilla values: " + string.Join(", ", values));
+                PlumbPlugin.Log.LogInfo("Plumb: " + Vanilla.Count + " materials (" + Table.Count + " names), vanilla values: " + string.Join(", ", values));
             }
         }
 
         public static void Apply()
         {
-            Materials.RemoveWhere(m => m == null);
+            foreach (Material dead in Vanilla.Keys.Where(m => m == null).ToList())
+                Vanilla.Remove(dead);
             float strength = PluginConfig.Strength.Value;
-            foreach (Material m in Materials)
-                m.SetFloat(ID, WarpModel.Target(Table.Resolve(m.name, 0f), strength, _compare));
+            foreach (var kv in Vanilla)
+                kv.Key.SetFloat(ID, WarpModel.Target(kv.Value, strength, _compare));
         }
 
         public static string Describe() =>
             "Plumb: strength " + PluginConfig.Strength.Value.ToString("0.###", CultureInfo.InvariantCulture)
-            + (_compare ? " (comparing: showing vanilla)" : "") + ", " + Materials.Count + " materials";
+            + (_compare ? " (comparing: showing vanilla)" : "") + ", " + Vanilla.Count + " materials";
     }
 }

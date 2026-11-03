@@ -3,11 +3,11 @@ using System.Collections.Generic;
 namespace Plumb.Core.Model
 {
     /// <summary>
-    /// The vanilla ripple value per material base name, recorded the first time the name is seen.
-    /// Runtime copies ("X (Instance)", or the ghost's new Material(X)) already carry the scaled value,
-    /// so they must resolve to the original's vanilla value, never record their own.
+    /// Decides each material's vanilla ripple value. On the first scan nothing has been scaled yet, so every
+    /// material's own value is trusted. A material first seen later may be a runtime copy ("X (Instance)", or the
+    /// ghost's new Material(X)) already carrying the scaled value, so it takes the value recorded for its base name.
     /// </summary>
-    // shortcut: two different materials with the same name share one vanilla value; upgrade to per-instance tracking if a mod ships same-named materials with different ripple values.
+    // shortcut: a later-seen copy of one of several same-named materials takes the first one's value; upgrade if that shows up wrong in-game.
     public sealed class VanillaTable
     {
         private const string InstanceSuffix = " (Instance)";
@@ -15,13 +15,15 @@ namespace Plumb.Core.Model
 
         public int Count => _vanilla.Count;
 
-        public float Resolve(string materialName, float current)
+        public float Record(string materialName, float current, bool trusted)
         {
             string key = BaseName(materialName);
-            if (_vanilla.TryGetValue(key, out float v))
-                return v;
-            _vanilla[key] = current;
-            return current;
+            if (!_vanilla.TryGetValue(key, out float v))
+            {
+                _vanilla[key] = current;
+                return current;
+            }
+            return trusted ? current : v;
         }
 
         public static string BaseName(string materialName)

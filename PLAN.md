@@ -95,12 +95,13 @@ depth fighting between the text and a perfectly flat board. Confirm on the rig (
 
 ### 2.1 Approach: shared materials, written once
 
-- `Ripple.Scan()` calls `Resources.FindObjectsOfTypeAll<Material>()`. For each material where
-  `HasProperty("_RippleDistance")` is true, it adds the material to the set of materials to
-  write. The vanilla value is recorded per **base name**, with `" (Instance)"` suffixes stripped,
-  and **only the first time that name is seen**. Runtime copies (`new Material(src)` for the ghost,
-  `renderer.material`) already carry the scaled value. Keying by base name means a later scan never
-  records a scaled copy as vanilla, so applying again never compounds.
+- `Ripple.Scan()` calls `Resources.FindObjectsOfTypeAll<Material>()` and records a vanilla value
+  **per material** for each one where `HasProperty("_RippleDistance")` is true. On the first scan
+  nothing has been scaled yet, so each material's own value is trusted. (The rig showed 615
+  materials under 610 names, so names alone aren't unique.) A material first seen on a later scan
+  may be a runtime copy (`new Material(src)` for the ghost, or `renderer.material`'s
+  `"X (Instance)"`) that already carries the scaled value. Such a material takes the value first
+  recorded for its base name, with `" (Instance)"` stripped, so applying again never compounds.
 - `Ripple.Apply()` writes `WarpModel.Target(vanilla, strength, compare)` to every known material.
   It skips and removes destroyed materials (Unity `== null`).
 - This costs a few hundred float writes when a world loads and when the setting changes, and

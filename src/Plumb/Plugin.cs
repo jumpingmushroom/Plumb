@@ -68,7 +68,8 @@ namespace Plumb
         {
             if (Player.m_localPlayer == null || !PluginConfig.CompareKey.Value.IsDown())
                 return;
-            if (Console.IsVisible() || (Chat.instance != null && Chat.instance.HasFocus()))
+            // The game's own check: chat, console, sign/tag text, build search, map, menus, inventory.
+            if (!Player.m_localPlayer.TakeInput())
                 return;
             Ripple.Compare = !Ripple.Compare;
             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, Ripple.Compare ? "Plumb: vanilla warp" : "Plumb: your strength");
